@@ -1,0 +1,13 @@
+{
+  "site": {
+    "title": "gitignore.deno.dev",
+    "github": "https://github.com/Symbitic/gitignore.deno.dev"
+  },
+  "server": {
+    "errors": {
+      "notfound": "Not Found",
+      "unexpected": "Unexpected Server Error"
+    },
+    "home": "Back to Home"
+  }
+}

@@ -1,23 +1,33 @@
-import { Head } from "$fresh/runtime.ts";
-import Counter from "../islands/Counter.tsx";
+import Logo from "$/components/Logo.tsx";
+import SearchBar from "$/islands/SearchBar.tsx";
+import { getGitignoreFiles } from "$/common/github.ts";
+import type { Handlers, PageProps } from "$fresh/server.ts";
+import type { GitHubFile } from "$/common/github.ts";
 
-export default function Home() {
+export const handler: Handlers<GitHubFile[]> = {
+  async GET(_req, ctx) {
+    try {
+      const data = await getGitignoreFiles();
+        return ctx.render(data);
+    } catch (_e) {
+      return new Response("Failed to retrieve gitignore list from GitHub", {
+        status: 500,
+      });
+    }
+  },
+};
+
+export default function Home({ data }: PageProps<GitHubFile[]>) {
   return (
     <>
-      <Head>
-        <title>Fresh App</title>
-      </Head>
-      <div class="p-4 mx-auto max-w-screen-md">
-        <img
-          src="/logo.svg"
-          class="w-32 h-32"
-          alt="the fresh logo: a sliced lemon dripping with juice"
-        />
-        <p class="my-6">
-          Welcome to `fresh`. Try updating this message in the ./routes/index.tsx
-          file, and refresh.
-        </p>
-        <Counter start={3} />
+      <div class="flex flex-col items-center justify-center h-screen">
+        <Logo color="#1D4ED8" class="h-14" />
+        <h2 class="text-sm font-medium text-center">
+          Generate custom .gitignore files from templates
+        </h2>
+        <div class="flex items-center mt-10 flex-wrap w-4/12">
+          <SearchBar items={data} />
+        </div>
       </div>
     </>
   );
