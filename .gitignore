@@ -3,3 +3,6 @@ temp/
 node_modules/
 deno.lock
 .env
+
+# Fresh build directory
+_fresh/

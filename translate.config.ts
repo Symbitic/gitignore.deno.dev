@@ -1,4 +1,4 @@
-import enUS from "$/translations/en-US.json" assert { type: "json" };
+import enUS from "$/translations/en-US.json" with { type: "json" };
 import { Options } from "localekit_fresh";
 
 export default {

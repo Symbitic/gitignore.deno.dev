@@ -1,19 +1,21 @@
-import { HandlerContext } from "$fresh/server.ts";
-import { getGitignoreFiles } from "$/common/github.ts";
-import type { GitHubFile } from "$/common/github.ts";
+import { FreshContext } from "$fresh/server.ts";
+import { getGitignoreFiles } from "$/common/gitignore.ts";
+import type { GitignoreFile } from "$/common/gitignore.ts";
+
+interface GitignoreItem {
+  name: string;
+  content: string;
+}
 
 export const handler = async (
   req: Request,
-  ctx: HandlerContext,
+  ctx: FreshContext,
 ): Promise<Response> => {
-  let contents: GitHubFile[] = [];
-  let body = `# Created by ${req.url}\n`;
-  body += `# Edit at ${
-    req.url.replaceAll("?", "&").replace("/api/", "/?templates=")
-  }\n\n`;
+  let files: GitignoreFile[] = [];
+  const items: GitignoreItem[] = [];
 
   try {
-    contents = await getGitignoreFiles();
+    files = await getGitignoreFiles();
   } catch (_e) {
     return new Response("Failed to retrieve gitignore list from GitHub", {
       status: 500,
@@ -21,50 +23,69 @@ export const handler = async (
   }
 
   if (ctx.params.template) {
-    const c = new Intl.Collator("en", { ignorePunctuation: true });
     const templates = ctx.params.template.split(",");
     for (let i = 0; i < templates.length; i++) {
       const template = templates[i];
 
-      // TODO: get capitalized name from API.
-      const item = contents.find((item) =>
-        // TODO: since toLowerCase() is needed anyway, is Collator needed?
-        c.compare(item.name.toLowerCase(), template.toLowerCase()) === 0
+      const item = files.find((item) =>
+        item.name.toLocaleLowerCase() ===
+          decodeURIComponent(template.toLocaleLowerCase())
       );
       if (!item) {
-        // TODO: return error.
+        items.push({
+          name: templates[i],
+          content: `### NOT FOUND: ${templates[i]} ###${
+            i !== templates.length - 1 ? "\n\n" : ""
+          }`,
+        });
         continue;
       }
 
       let content = "";
 
       try {
-        const response = await fetch(item.downloadUrl);
-        content = await response.text();
+        content = await Deno.readTextFile(item.path);
       } catch (_e) {
-        return new Response(`Failed to download ${item.downloadUrl}`, {
+        return new Response(`Failed to read "${item.path}"`, {
           status: 500,
         });
       }
 
-      body += `### ${item.name} ###\n`;
-      body += content;
+      const contentStr = `### ${item.name} ###\n${content}`;
 
-      if (i !== templates.length - 1) {
-        body += "\n";
-      }
+      items.push({
+        name: item.name,
+        content: contentStr,
+      });
     }
   }
 
-  const { searchParams } = new URL(req.url);
+  const { origin, searchParams } = new URL(req.url);
 
-  if (searchParams.has("extra")) {
-    const extras = searchParams.get("extra")!.split(",");
-    body += "\n### Extras ###\n";
-    for (const line of extras) {
-      body += `${line}\n`;
-    }
+  let editUrl = `${origin}/?`;
+
+  if (items.length) {
+    editUrl += `templates=${items.map(({ name }) => name).join(",")}`;
   }
+
+  if (searchParams.has("extras")) {
+    if (items.length) {
+      editUrl += "&";
+    }
+    editUrl += `extras=${searchParams.get("extras")}`;
+  }
+
+  const parts: string[] = [
+    `# Created by ${req.url}\n# Edit at ${editUrl}\n`,
+    items.map(({ content }) => content).join("\n")
+  ];
+
+  if (searchParams.has("extras")) {
+    const extras = searchParams.get("extras")!.split(",");
+    parts.push(`### Extras ###\n${extras.join("\n")}`);
+  }
+
+  const body = parts.join("\n");
 
   return new Response(body);
 };

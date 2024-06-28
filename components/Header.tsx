@@ -1,5 +1,5 @@
 import { GitHubIcon } from "$/components/GitHubIcon.tsx";
-import data from "$/translations/en-US.json" assert { type: "json" };
+import data from "$/translations/en-US.json" with { type: "json" };
 
 export default function Header(props: { class?: string }) {
   return (
