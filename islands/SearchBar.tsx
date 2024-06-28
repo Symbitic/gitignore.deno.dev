@@ -38,6 +38,9 @@ export default function SearchBar({ items }: SearchBarProps) {
   const searchRef = useRef<HTMLInputElement>(null);
 
   const populateFromUrl = () => {
+    if (!globalThis.location) {
+      return;
+    }
     const { searchParams } = new URL(location.href);
     if (searchParams.has("templates")) {
       const templates = searchParams.get("templates")!.split(",");
@@ -146,7 +149,7 @@ export default function SearchBar({ items }: SearchBarProps) {
 
   useEffect(() => {
     populateFromUrl();
-  }, [location]);
+  }, []);
 
   return (
     <div class="relative flex-grow w-full">
