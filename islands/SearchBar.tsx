@@ -106,8 +106,6 @@ export default function SearchBar({ items }: SearchBarProps) {
       e.preventDefault();
       const el = e.target as HTMLLIElement;
       const item = filteredItems[Number(el?.dataset.index)];
-      console.log(`Enter:`);
-      console.log(item);
       addItem(item);
     }
   };
