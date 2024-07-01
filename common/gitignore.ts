@@ -21,7 +21,7 @@ export async function getGitignoreFiles(): Promise<GitignoreFile[]> {
   }
 
   const files: GitignoreFile[] = [];
-  for await (const entry of walk("gitignore", options)) {
+  for await (const entry of walk("./gitignore", options)) {
     const path = resolve(entry.path);
     const name = path
       .replace(/.*\/gitignore\//, "")
@@ -33,7 +33,7 @@ export async function getGitignoreFiles(): Promise<GitignoreFile[]> {
     .filter((a, i, arr) => arr.findIndex((b) => a.path === b.path) === i);
   if (isDenoDeploy) {
     console.log("getGitignoreFiles():");
-    console.dir(ret);
+    console.dir(ret.slice(0, 5));
   }
   return ret;
 }

@@ -37,6 +37,11 @@ export default function SearchBar({ items }: SearchBarProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    console.log("Items:");
+    console.dir(items);
+  }, [items]);
+
   const populateFromUrl = () => {
     if (!globalThis.location) {
       return;
@@ -47,11 +52,14 @@ export default function SearchBar({ items }: SearchBarProps) {
       const selectedItems = items.filter((item) =>
         templates.includes(item.name)
       );
+      console.log(`Populating from templates: ${selectedItems.join(", ")}`);
       setSelectedItems(selectedItems);
     }
 
     if (searchParams.get("extras")) {
-      setExtras(searchParams.get("extras")!.split(","));
+      const extras = searchParams.get("extras")!.split(",");
+      console.log(`Populating from extras: ${extras}`);
+      setExtras(extras);
     }
   };
 
@@ -79,6 +87,11 @@ export default function SearchBar({ items }: SearchBarProps) {
         ),
     [items, searchString],
   );
+
+  useEffect(() => {
+    console.log("Filtered items:");
+    console.dir(filteredItems);
+  }, [filteredItems]);
 
   const onSearch = (e: JSX.TargetedEvent<HTMLInputElement, Event>) => {
     setSearchString(e.currentTarget.value);
