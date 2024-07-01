@@ -2,6 +2,8 @@ import { FreshContext } from "$fresh/server.ts";
 import { getGitignoreFiles } from "$/common/gitignore.ts";
 import type { GitignoreFile } from "$/common/gitignore.ts";
 
+const isDenoDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
+
 interface GitignoreItem {
   name: string;
   content: string;
@@ -16,6 +18,10 @@ export const handler = async (
 
   try {
     files = await getGitignoreFiles();
+    if (isDenoDeploy) {
+      console.log("gitignore files");
+      console.dir(files);
+    }
   } catch (_e) {
     return new Response("Failed to retrieve gitignore list from GitHub", {
       status: 500,
