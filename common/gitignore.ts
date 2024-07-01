@@ -8,6 +8,8 @@ export interface GitignoreFile {
   name: string;
 }
 
+const isDenoDeploy = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
+
 export async function getGitignoreFiles(): Promise<GitignoreFile[]> {
   const options: WalkOptions = {
     followSymlinks: true,
@@ -19,14 +21,19 @@ export async function getGitignoreFiles(): Promise<GitignoreFile[]> {
   }
 
   const files: GitignoreFile[] = [];
-  for (const entry of await Array.fromAsync(walk("gitignore", options))) {
+  for await (const entry of walk("gitignore", options)) {
     const path = resolve(entry.path);
     const name = path
       .replace(/.*\/gitignore\//, "")
       .replace(".gitignore", "");
     files.push({ name: name, path: path });
   }
-  return files
+  const ret = files
     .sort((a, b) => basename(a.path).localeCompare(basename(b.path)))
     .filter((a, i, arr) => arr.findIndex((b) => a.path === b.path) === i);
+  if (isDenoDeploy) {
+    console.log("getGitignoreFiles():");
+    console.dir(ret);
+  }
+  return ret;
 }
